@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ZIPファイルの開き方</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;700&family=Shippori+Mincho:wght@400;700&display=swap');
+
+  :root {
+    --ink: #1a1208;
+    --paper: #f5f0e8;
+    --aged: #c8b89a;
+    --red: #9b2335;
+    --gold: #b8860b;
+    --blue: #2a5a7c;
+    --green: #3a6b4a;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Noto Serif JP', serif;
+    min-height: 100vh;
+    padding: 24px 16px 48px;
+    background-image:
+      repeating-linear-gradient(0deg, transparent, transparent 31px, rgba(200,184,154,0.25) 31px, rgba(200,184,154,0.25) 32px);
+  }
+
+  .container { max-width: 680px; margin: 0 auto; }
+
+  /* HEADER */
+  .header {
+    text-align: center;
+    padding: 40px 0 32px;
+    border-bottom: 2px solid var(--ink);
+    margin-bottom: 36px;
+    animation: fadeIn 0.7s ease;
+  }
+
+  .stamp {
+    display: inline-block;
+    border: 2px solid var(--red);
+    color: var(--red);
+    font-size: 11px;
+    letter-spacing: 0.35em;
+    padding: 3px 14px;
+    margin-bottom: 16px;
+    transform: rotate(-1.5deg);
+  }
+
+  h1 {
+    font-family: 'Shippori Mincho', serif;
+    font-size: clamp(22px, 5vw, 30px);
+    line-height: 1.6;
+    letter-spacing: 0.08em;
+    margin-bottom: 10px;
+  }
+
+  .lead {
+    font-size: 13px;
+    color: #5a4f3f;
+    line-height: 2;
+    margin-top: 12px;
+  }
+
+  /* TAB */
+  .tab-wrap {
+    display: flex;
+    gap: 0;
+    margin-bottom: 0;
+    border-bottom: 2px solid var(--ink);
+  }
+
+  .tab-btn {
+    flex: 1;
+    padding: 12px 4px;
+    background: transparent;
+    border: 1px solid var(--aged);
+    border-bottom: none;
+    font-family: 'Shippori Mincho', serif;
+    font-size: clamp(11px, 2.5vw, 14px);
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    color: var(--aged);
+    transition: all 0.25s;
+    position: relative;
+    top: 2px;
+  }
+  .tab-btn.active {
+    background: var(--paper);
+    border-color: var(--ink);
+    border-bottom: 2px solid var(--paper);
+    color: var(--ink);
+    font-weight: bold;
+    z-index: 1;
+  }
+  .tab-btn:hover:not(.active) {
+    color: var(--ink);
+    background: rgba(200,184,154,0.2);
+  }
+
+  /* PANEL */
+  .panel { display: none; animation: fadeIn 0.4s ease; padding-top: 32px; }
+  .panel.active { display: block; }
+
+  /* WHAT IS ZIP */
+  .info-box {
+    background: rgba(200,184,154,0.15);
+    border-left: 3px solid var(--gold);
+    padding: 16px 20px;
+    margin-bottom: 32px;
+    font-size: 13px;
+    line-height: 2;
+    color: #4a3f2f;
+  }
+  .info-box strong { color: var(--gold); }
+
+  /* SECTION */
+  .section {
+    margin-bottom: 36px;
+  }
+
+  .section-title {
+    font-family: 'Shippori Mincho', serif;
+    font-size: 17px;
+    letter-spacing: 0.1em;
+    border-bottom: 1px solid var(--aged);
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .section-title .icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px; height: 28px;
+    background: var(--ink);
+    color: var(--paper);
+    font-size: 13px;
+    font-family: sans-serif;
+    flex-shrink: 0;
+  }
+
+  /* STEPS */
+  .steps { display: flex; flex-direction: column; gap: 16px; }
+
+  .step {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+  }
+
+  .step-num {
+    flex-shrink: 0;
+    width: 28px; height: 28px;
+    border: 2px solid var(--ink);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Shippori Mincho', serif;
+    font-size: 13px;
+    font-weight: bold;
+  }
+
+  .step-content { flex: 1; }
+
+  .step-title {
+    font-size: 14px;
+    font-weight: bold;
+    margin-bottom: 6px;
+    line-height: 1.6;
+  }
+
+  .step-desc {
+    font-size: 13px;
+    line-height: 2;
+    color: #4a3f2f;
+  }
+
+  .tip {
+    display: inline-block;
+    background: rgba(155,35,53,0.08);
+    border-left: 2px solid var(--red);
+    padding: 8px 14px;
+    margin-top: 8px;
+    font-size: 12px;
+    line-height: 1.8;
+    color: var(--red);
+    width: 100%;
+  }
+
+  .note {
+    display: inline-block;
+    background: rgba(42,90,124,0.07);
+    border-left: 2px solid var(--blue);
+    padding: 8px 14px;
+    margin-top: 8px;
+    font-size: 12px;
+    line-height: 1.8;
+    color: var(--blue);
+    width: 100%;
+  }
+
+  .good {
+    display: inline-block;
+    background: rgba(58,107,74,0.07);
+    border-left: 2px solid var(--green);
+    padding: 8px 14px;
+    margin-top: 8px;
+    font-size: 12px;
+    line-height: 1.8;
+    color: var(--green);
+    width: 100%;
+  }
+
+  /* KEY VISUAL */
+  .key-visual {
+    text-align: center;
+    padding: 20px;
+    background: rgba(200,184,154,0.1);
+    border: 1px solid var(--aged);
+    margin-bottom: 24px;
+    font-size: 42px;
+    line-height: 1;
+  }
+  .key-visual p {
+    font-size: 12px;
+    color: var(--aged);
+    margin-top: 8px;
+    letter-spacing: 0.2em;
+  }
+
+  /* DIVIDER */
+  .divider {
+    width: 60px;
+    height: 1px;
+    background: var(--aged);
+    margin: 32px auto;
+  }
+
+  /* FOOTER */
+  .footer {
+    text-align: center;
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    color: var(--aged);
+    margin-top: 48px;
+    padding-top: 20px;
+    border-top: 1px solid var(--aged);
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @media (max-width: 480px) {
+    .step { gap: 12px; }
+    .key-visual { font-size: 32px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="stamp">かんたん説明書</div>
+    <h1>ZIPファイルの<br>開き方</h1>
+    <p class="lead">パソコンが苦手な方でも<br>この手順通りにやれば大丈夫です</p>
+  </div>
+
+  <!-- WHAT IS ZIP -->
+  <div class="info-box">
+    <strong>📦 ZIPファイルとは？</strong><br>
+    複数のファイルをひとつにまとめて、小さく圧縮したものです。<br>
+    そのままでは中身が使えないので、「解凍（展開）」という作業が必要です。<br>
+    解凍すると、中のファイルが取り出せます。
+  </div>
+
+  <!-- TABS -->
+  <div class="tab-wrap">
+    <button class="tab-btn active" onclick="switchTab('win', this)">🪟 Windows</button>
+    <button class="tab-btn" onclick="switchTab('mac', this)">🍎 Mac</button>
+    <button class="tab-btn" onclick="switchTab('iphone', this)">📱 iPhone</button>
+    <button class="tab-btn" onclick="switchTab('android', this)">🤖 Android</button>
+  </div>
+
+  <!-- WINDOWS -->
+  <div id="win" class="panel active">
+    <div class="key-visual">
+      📁🗜️→📂
+      <p>ZIPを解凍してフォルダを取り出す</p>
+    </div>
+
+    <div class="section">
+      <div class="section-title">
+        <span class="icon">1</span>
+        ZIPファイルをダウンロードする
+      </div>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-content">
+            <div class="step-title">ダウンロードを実行する</div>
+            <div class="step-desc">サイトやメールのリンクをクリックすると、ダウンロードが始まります。</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-content">
+            <div class="step-title">「ダウンロード」フォルダを開く</div>
+            <div class="step-desc">
+              画面下のタスクバーにある、黄色いフォルダのアイコン（エクスプローラー）をクリック。<br>
+              左側のメニューに「ダウンロード」があるのでクリックします。
+            </div>
+            <div class="tip">💡 または、ダウンロード完了後にブラウザ右上に出る通知から「ファイルを開く」でも行けます</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="section">
+      <div class="section-title">
+        <span class="icon">2</span>
+        ZIPファイルを解凍する
+      </div>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-content">
+            <div class="step-title">ZIPファイルを右クリックする</div>
+            <div class="step-desc">
+              📦マークのついたファイルの上で、マウスの<strong>右側のボタン</strong>をクリックします。<br>
+              メニューが出てきます。
+            </div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-content">
+            <div class="step-title">「すべて展開」を選ぶ</div>
+            <div class="step-desc">
+              メニューの中に「<strong>すべて展開…</strong>」という項目があります。クリックします。<br>
+              （Windows 11の場合、最初に「その他のオプションを表示」を押してから探してください）
+            </div>
+            <div class="note">📝 Windows 11では右クリックメニューが簡略化されています。「その他のオプションを表示」→「すべて展開」の順に選んでください</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-content">
+            <div class="step-title">保存場所を「デスクトップ」にする</div>
+            <div class="step-desc">
+              小さなウィンドウが開きます。<br>
+              「参照」ボタンを押して、保存先に<strong>「デスクトップ」</strong>を選びます。<br>
+              デスクトップに保存すると、すぐに見つけられて便利です。
+            </div>
+            <div class="good">✅ 慣れないうちはデスクトップへの保存がおすすめ！見失いにくいです</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">4</div>
+          <div class="step-content">
+            <div class="step-title">「展開」ボタンを押す</div>
+            <div class="step-desc">
+              「展開」ボタンをクリックすると、解凍が始まります。<br>
+              しばらく待つと、デスクトップにフォルダが現れます。
+            </div>
+            <div class="tip">💡 解凍後はZIPファイルは削除しても大丈夫です。中身はフォルダの方に入っています</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="section">
+      <div class="section-title">
+        <span class="icon">3</span>
+        フォルダの中身を使う
+      </div>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-content">
+            <div class="step-title">デスクトップのフォルダをダブルクリック</div>
+            <div class="step-desc">
+              デスクトップに出てきたフォルダをダブルクリックすると開けます。<br>
+              中のファイルをそのまま使えます。
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAC -->
+  <div id="mac" class="panel">
+    <div class="key-visual">
+      📁🗜️→📂
+      <p>ZIPを解凍してフォルダを取り出す</p>
+    </div>
+
+    <div class="section">
+      <div class="section-title">
+        <span class="icon">1</span>
+        ZIPファイルをダウンロードする
+      </div>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-content">
+            <div class="step-title">ダウンロードを実行する</div>
+            <div class="step-desc">サイトやメールのリンクをクリックすると、ダウンロードが始まります。</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-content">
+            <div class="step-title">「ダウンロード」フォルダを開く</div>
+            <div class="step-desc">
+              画面下の Dock（アイコンが並んでいる場所）にある<strong>Finder（顔のアイコン）</strong>をクリック。<br>
+              左メニューの「ダウンロード」を選びます。
+            </div>
+            <div class="tip">💡 ブラウザ右上の ↓ アイコンからも確認できます</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="section">
+      <div class="section-title">
+        <span class="icon">2</span>
+        ZIPファイルを解凍する
+      </div>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-content">
+            <div class="step-title">ZIPファイルをダブルクリックする</div>
+            <div class="step-desc">
+              Macはダブルクリックするだけで自動的に解凍されます。<br>
+              📦マークのファイルを<strong>ダブルクリック</strong>してください。
+            </div>
+            <div class="good">✅ Macは右クリックしなくて大丈夫！ダブルクリックだけでOKです</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-content">
+            <div class="step-title">同じ場所にフォルダが作られる</div>
+            <div class="step-desc">
+              ダブルクリックすると、ZIPファイルと同じ場所（ダウンロードフォルダ）に、<br>
+              同じ名前のフォルダが自動で作られます。
+            </div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-content">
+            <div class="step-title">フォルダをデスクトップに移動する（おすすめ）</div>
+            <div class="step-desc">
+              できたフォルダを<strong>デスクトップにドラッグ＆ドロップ</strong>すると、<br>
+              すぐ見つけられて便利です。
+            </div>
+            <div class="tip">💡 ドラッグ＆ドロップ：フォルダを左クリックしたまま、デスクトップまで引っ張って離す操作です</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="section">
+      <div class="section-title">
+        <span class="icon">3</span>
+        フォルダの中身を使う
+      </div>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-content">
+            <div class="step-title">フォルダをダブルクリックして開く</div>
+            <div class="step-desc">
+              フォルダをダブルクリックすると中身が見られます。<br>
+              中のファイルをそのまま使えます。
+            </div>
+            <div class="tip">💡 解凍後はZIPファイルは削除しても大丈夫です。中身はフォルダの方に入っています</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="section">
+      <div class="section-title">
+        <span class="icon">⚠</span>
+        うまくいかないときは
+      </div>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">?</div>
+          <div class="step-content">
+            <div class="step-title">解凍できないときの対処法</div>
+            <div class="step-desc">
+              まれに、Macの標準機能では解凍できないZIPがあります。<br>
+              その場合は無料アプリ「<strong>The Unarchiver</strong>」をApp Storeから入れると解決することが多いです。
+            </div>
+            <div class="note">📝 App Store で「The Unarchiver」と検索→無料でインストールできます</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- iPHONE -->
+  <div id="iphone" class="panel">
+    <div class="key-visual">
+      📱🗜️→📂
+      <p>ZIPを解凍してファイルを取り出す</p>
+    </div>
+
+    <div class="info-box">
+      <strong>📌 iPhoneでZIPを開くには「ファイル」アプリを使います</strong><br>
+      最初からiPhoneに入っている青いフォルダのアイコンのアプリです。<br>
+      削除していた場合はApp Storeで「ファイル」と検索して再インストールできます。
+    </div>
+
+    <div class="section">
+      <div class="section-title">
+        <span class="icon">1</span>
+        ZIPファイルをダウンロードする
+      </div>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-content">
+            <div class="step-title">リンクをタップする</div>
+            <div class="step-desc">サイトやメールのダウンロードリンクをタップします。</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-content">
+            <div class="step-title">「ダウンロード」を選ぶ</div>
+            <div class="step-desc">
+              画面に「"ファイル"にダウンロード」などと表示されたらタップします。<br>
+              保存先は「ダウンロード」フォルダのままでOKです。
+            </div>
+            <div class="tip">💡 Safariを使っていると画面右上に ↓ マークが出ます。タップするとダウンロード状況が確認できます</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="section">
+      <div class="section-title">
+        <span class="icon">2</span>
+        ZIPファイルを解凍する
+      </div>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-content">
+            <div class="step-title">「ファイル」アプリを開く</div>
+            <div class="step-desc">
+              ホーム画面にある青いフォルダのアイコン（ファイル）をタップして開きます。
+            </div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-content">
+            <div class="step-title">「ダウンロード」フォルダを開く</div>
+            <div class="step-desc">
+              「ブラウズ」→「このiPhone内」→「ダウンロード」の順にタップします。<br>
+              ZIPファイルが表示されます。
+            </div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-content">
+            <div class="step-title">ZIPファイルをタップする</div>
+            <div class="step-desc">
+              ZIPファイルを<strong>1回タップ</strong>するだけで自動的に解凍されます。<br>
+              同じ場所に同じ名前のフォルダが作られます。
+            </div>
+            <div class="good">✅ iPhoneはタップ1回で解凍完了！とても簡単です</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="section">
+      <div class="section-title">
+        <span class="icon">3</span>
+        フォルダの中身を使う
+      </div>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-content">
+            <div class="step-title">できたフォルダをタップして開く</div>
+            <div class="step-desc">
+              解凍されてできたフォルダをタップすると中身が見られます。<br>
+              画像などはそのままタップして開けます。
+            </div>
+            <div class="tip">💡 解凍後のZIPファイルは長押し→「削除」で消しても大丈夫です</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-content">
+            <div class="step-title">写真アプリに保存したい場合</div>
+            <div class="step-desc">
+              画像ファイルをタップして開いたら、左下の「共有」ボタン（四角から矢印が出ているマーク）→「画像を保存」をタップします。
+            </div>
+            <div class="good">✅ これでカメラロールに保存されます</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ANDROID -->
+  <div id="android" class="panel">
+    <div class="key-visual">
+      📱🗜️→📂
+      <p>ZIPを解凍してファイルを取り出す</p>
+    </div>
+
+    <div class="info-box">
+      <strong>📌 Androidはファイルマネージャーアプリを使います</strong><br>
+      機種によって「マイファイル」「ファイル」「Files」など名前が違います。<br>
+      ホーム画面やアプリ一覧にあるフォルダのアイコンのアプリを探してください。<br>
+      ない場合はGoogleの「Files by Google」（無料）をPlay Storeから入れると確実です。
+    </div>
+
+    <div class="section">
+      <div class="section-title">
+        <span class="icon">1</span>
+        ZIPファイルをダウンロードする
+      </div>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-content">
+            <div class="step-title">リンクをタップする</div>
+            <div class="step-desc">サイトやメールのダウンロードリンクをタップします。</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-content">
+            <div class="step-title">「ダウンロード」を確認する</div>
+            <div class="step-desc">
+              画面上部に通知が出てダウンロードが始まります。<br>
+              完了すると「ダウンロード完了」と表示されます。
+            </div>
+            <div class="tip">💡 画面上から下にスワイプすると通知が見られます。ダウンロード状況を確認できます</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="section">
+      <div class="section-title">
+        <span class="icon">2</span>
+        ZIPファイルを解凍する
+      </div>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-content">
+            <div class="step-title">ファイルマネージャーを開く</div>
+            <div class="step-desc">
+              「マイファイル」「Files」などのアプリをタップして開きます。
+            </div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-content">
+            <div class="step-title">「ダウンロード」フォルダを開く</div>
+            <div class="step-desc">
+              アプリの中の「ダウンロード」または「Download」フォルダをタップします。<br>
+              ZIPファイルが表示されます。
+            </div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-content">
+            <div class="step-title">ZIPファイルをタップする</div>
+            <div class="step-desc">
+              ZIPファイルを<strong>1回タップ</strong>すると「解凍しますか？」などのメニューが出ます。<br>
+              「解凍」または「展開」をタップします。
+            </div>
+            <div class="good">✅ 多くのAndroid機種はタップ1回で解凍できます</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">4</div>
+          <div class="step-content">
+            <div class="step-title">解凍先を確認する</div>
+            <div class="step-desc">
+              解凍先フォルダを聞いてくる場合は、そのまま「OK」や「解凍」を押せば大丈夫です。<br>
+              同じ「ダウンロード」フォルダ内にフォルダが作られます。
+            </div>
+            <div class="note">📝 機種によって画面が少し違う場合があります。「展開」「抽出」「解凍」など似た言葉を選んでください</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="section">
+      <div class="section-title">
+        <span class="icon">3</span>
+        フォルダの中身を使う
+      </div>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-content">
+            <div class="step-title">できたフォルダをタップして開く</div>
+            <div class="step-desc">
+              解凍されてできたフォルダをタップすると中身が見られます。<br>
+              画像などはそのままタップして開けます。
+            </div>
+            <div class="tip">💡 解凍後のZIPファイルは長押し→「削除」で消しても大丈夫です</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-content">
+            <div class="step-title">写真アプリに保存したい場合</div>
+            <div class="step-desc">
+              画像ファイルを長押し→「コピー」または「移動」→「ギャラリー（写真）」フォルダへ移動させます。<br>
+              または画像を開いて「共有」→「ギャラリーに保存」でも保存できます。
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    ── ZIP解凍かんたん説明書 ──<br><br>
+    <span style="font-size:12px; letter-spacing:0.25em;">© 小春ノ帳 / Koharu no Cho</span>
+  </div>
+
+</div>
+
+<script>
+function switchTab(id, btn) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+}
+</script>
+</body>
+</html>
